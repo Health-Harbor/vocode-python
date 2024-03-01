@@ -79,8 +79,6 @@ class AzureSynthesizer(BaseSynthesizer[AzureSynthesizerConfig]):
             subscription=azure_speech_key, region=azure_speech_region
         )
         # speech_config.set_property(speechsdk.PropertyId.Speech_LogFilename, "azureSpeechLog")
-        speech_config.set_property_by_name("OPENSSL_DISABLE_CRL_CHECK", "true")
-        speech_config.set_property_by_name("OPENSSL_SINGLE_TRUSTED_CERT", "false")
         if self.synthesizer_config.audio_encoding == AudioEncoding.LINEAR16:
             if self.synthesizer_config.sampling_rate == 44100:
                 speech_config.set_speech_synthesis_output_format(
