@@ -41,6 +41,7 @@ class SynthesizerConfig(TypedModel, type=SynthesizerType.BASE.value):
     sampling_rate: int
     audio_encoding: AudioEncoding
     should_encode_as_wav: bool = False
+    use_audio_cache: bool = False
     sentiment_config: Optional[SentimentConfig] = None
 
     class Config:
