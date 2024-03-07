@@ -53,6 +53,7 @@ tracer = trace.get_tracer(__name__)
 
 
 class SynthesisResult:
+    is_cached_audio:bool = False
     class ChunkResult:
         def __init__(self, chunk: bytes, is_last_chunk: bool):
             self.chunk = chunk
@@ -62,10 +63,11 @@ class SynthesisResult:
         self,
         chunk_generator: AsyncGenerator[ChunkResult, None],
         get_message_up_to: Callable[[int], str],
+        is_cached_audio: bool = False,
     ):
         self.chunk_generator = chunk_generator
         self.get_message_up_to = get_message_up_to
-
+        self.is_cached_audio = is_cached_audio
 
 class FillerAudio:
     def __init__(
