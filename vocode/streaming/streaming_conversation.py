@@ -247,7 +247,7 @@ class StreamingConversation(Generic[OutputDeviceType]):
                     return
                 if isinstance(agent_response, AgentResponseStop):
                     self.conversation.logger.debug("Agent requested to stop")
-                    self.conversation.terminate()
+                    await self.conversation.terminate_async()
                     return
                 if isinstance(agent_response, AgentResponseMessage):
                     self.conversation.transcript.add_bot_message(
@@ -458,7 +458,7 @@ class StreamingConversation(Generic[OutputDeviceType]):
                 or ALLOWED_IDLE_TIME
             ):
                 self.logger.debug("Conversation idle for too long, terminating")
-                self.terminate()
+                await self.terminate_async()
                 return
             await asyncio.sleep(15)
 
@@ -584,6 +584,9 @@ class StreamingConversation(Generic[OutputDeviceType]):
 
     def mark_terminated(self):
         self.active = False
+
+    async def terminate_async(self):
+        self.terminate()
 
     def terminate(self):
         self.mark_terminated()
