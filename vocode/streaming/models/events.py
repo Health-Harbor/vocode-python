@@ -11,6 +11,7 @@ class Sender(str, Enum):
 class EventType(str, Enum):
     TRANSCRIPT = "event_transcript"
     TRANSCRIPT_COMPLETE = "event_transcript_complete"
+    POST_CALL_PROCESSING_READY = "event_post_call_processing_ready"
     PHONE_CALL_CONNECTED = "event_phone_call_connected"
     PHONE_CALL_ENDED = "event_phone_call_ended"
 
