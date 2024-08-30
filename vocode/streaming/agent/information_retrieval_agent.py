@@ -1,8 +1,8 @@
 import logging
 from typing import List, Optional
 
-from langchain import OpenAI
 from vocode.streaming.agent.llm_agent import LLMAgent
+
 from ..models.agent import InformationRetrievalAgentConfig, LLMAgentConfig
 
 
@@ -31,4 +31,4 @@ The AI begins the call by introducing itself and who it represents.
             ),
             logger=logger,
         )
-        self.llm = OpenAI(model_name="text-davinci-003", temperature=1)  # type: ignore
+        raise NotImplementedError()

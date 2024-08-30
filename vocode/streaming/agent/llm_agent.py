@@ -1,13 +1,8 @@
-import re
-from typing import AsyncGenerator, Optional, Tuple
-
-from langchain import OpenAI
-from typing import Generator
 import logging
+import re
+from typing import AsyncGenerator, Generator, Optional, Tuple
 
-import openai
 from vocode import getenv
-
 from vocode.streaming.agent.base_agent import BaseAgent, RespondAgent
 from vocode.streaming.agent.utils import stream_openai_response_async
 from vocode.streaming.models.agent import LLMAgentConfig
@@ -44,23 +39,7 @@ class LLMAgent(RespondAgent[LLMAgentConfig]):
         openai_api_key = openai_api_key or getenv("OPENAI_API_KEY")
         if not openai_api_key:
             raise ValueError("OPENAI_API_KEY must be set in environment or passed in")
-        self.llm = OpenAI(  # type: ignore
-            model_name=self.agent_config.model_name,
-            temperature=self.agent_config.temperature,
-            max_tokens=self.agent_config.max_tokens,
-            openai_api_key=openai_api_key,
-        )
         self.stop_tokens = [f"{recipient}:"]
-        self.first_response = (
-            self.llm(
-                self.prompt_template.format(
-                    history="", human_input=agent_config.expected_first_prompt
-                ),
-                stop=self.stop_tokens,
-            ).strip()
-            if agent_config.expected_first_prompt
-            else None
-        )
         self.is_first_response = True
 
     def create_prompt(self, human_input):
@@ -76,44 +55,7 @@ class LLMAgent(RespondAgent[LLMAgentConfig]):
         conversation_id: str,
         is_interrupt: bool = False,
     ) -> Tuple[str, bool]:
-        if is_interrupt and self.agent_config.cut_off_response:
-            cut_off_response = self.get_cut_off_response()
-            self.memory.append(self.get_memory_entry(human_input, cut_off_response))
-            return cut_off_response, False
-        self.logger.debug("LLM responding to human input")
-        if self.is_first_response and self.first_response:
-            self.logger.debug("First response is cached")
-            self.is_first_response = False
-            response = self.first_response
-        else:
-            response = (
-                (
-                    await self.llm.agenerate(
-                        [self.create_prompt(human_input)], stop=self.stop_tokens
-                    )
-                )
-                .generations[0][0]
-                .text
-            )
-            response = response.replace(f"{self.sender}:", "")
-        self.memory.append(self.get_memory_entry(human_input, response))
-        self.logger.debug(f"LLM response: {response}")
-        return response, False
-
-    async def _stream_sentences(self, prompt):
-        stream = await openai.Completion.acreate(
-            prompt=prompt,
-            max_tokens=self.agent_config.max_tokens,
-            temperature=self.agent_config.temperature,
-            model=self.agent_config.model_name,
-            stop=self.stop_tokens,
-            stream=True,
-        )
-        async for sentence in stream_openai_response_async(
-            stream,
-            get_text=lambda choice: choice.get("text"),
-        ):
-            yield sentence
+        raise NotImplementedError()
 
     async def _agen_from_list(self, l):
         for item in l:
@@ -125,29 +67,7 @@ class LLMAgent(RespondAgent[LLMAgentConfig]):
         conversation_id: str,
         is_interrupt: bool = False,
     ) -> AsyncGenerator[str, None]:
-        self.logger.debug("LLM generating response to human input")
-        if is_interrupt and self.agent_config.cut_off_response:
-            cut_off_response = self.get_cut_off_response()
-            self.memory.append(self.get_memory_entry(human_input, cut_off_response))
-            yield cut_off_response
-            return
-        self.memory.append(self.get_memory_entry(human_input, ""))
-        if self.is_first_response and self.first_response:
-            self.logger.debug("First response is cached")
-            self.is_first_response = False
-            sentences = self._agen_from_list([self.first_response])
-        else:
-            self.logger.debug("Creating LLM prompt")
-            prompt = self.create_prompt(human_input)
-            self.logger.debug("Streaming LLM response")
-            sentences = self._stream_sentences(prompt)
-        response_buffer = ""
-        async for sentence in sentences:
-            sentence = sentence.replace(f"{self.sender}:", "")
-            sentence = re.sub(r"^\s+(.*)", r" \1", sentence)
-            response_buffer += sentence
-            self.memory[-1] = self.get_memory_entry(human_input, response_buffer)
-            yield sentence
+        raise NotImplementedError()
 
     def update_last_bot_message_on_cut_off(self, message: str):
         last_message = self.memory[-1]
