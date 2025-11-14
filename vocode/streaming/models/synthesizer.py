@@ -25,6 +25,7 @@ class SynthesizerType(str, Enum):
     COQUI_TTS = "synthesizer_coqui_tts"
     COQUI = "synthesizer_coqui"
     BARK = "synthesizer_bark"
+    CARTESIA = "synthesizer_cartesia"
 
 
 class SentimentConfig(BaseModel):
