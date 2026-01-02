@@ -114,8 +114,6 @@ class DeepgramTranscriber(BaseAsyncTranscriber[DeepgramTranscriberConfig]):
             extra_params["version"] = self.transcriber_config.version
         if self.transcriber_config.keywords:
             extra_params["keywords"] = self.transcriber_config.keywords
-        if self.transcriber_config.numerals is not None:
-            extra_params["numerals"] = "true" if self.transcriber_config.numerals else "false"
         if (
             self.transcriber_config.endpointing_config
             and self.transcriber_config.endpointing_config.type

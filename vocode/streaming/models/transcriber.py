@@ -106,15 +106,6 @@ class DeepgramTranscriberConfig(TranscriberConfig, type=TranscriberType.DEEPGRAM
     tier: Optional[str] = None
     version: Optional[str] = None
     keywords: Optional[list] = None
-    api_key: Optional[str] = None
-    on_prem: bool = False
-    ws_url: str = DEEPGRAM_API_WS_URL
-    numerals: Optional[bool] = None
-
-
-# type: ignore
-class GladiaTranscriberConfig(TranscriberConfig, type=TranscriberType.GLADIA.value):
-    buffer_size_seconds: float = 0.1
 
 
 class GoogleTranscriberConfig(TranscriberConfig, type=TranscriberType.GOOGLE.value):
