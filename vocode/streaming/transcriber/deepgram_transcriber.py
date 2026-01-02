@@ -114,6 +114,8 @@ class DeepgramTranscriber(BaseAsyncTranscriber[DeepgramTranscriberConfig]):
             extra_params["version"] = self.transcriber_config.version
         if self.transcriber_config.keywords:
             extra_params["keywords"] = self.transcriber_config.keywords
+        if self.transcriber_config.numerals is not None:
+            extra_params["numerals"] = "true" if self.transcriber_config.numerals else "false"
         if (
             self.transcriber_config.endpointing_config
             and self.transcriber_config.endpointing_config.type
@@ -199,7 +201,8 @@ class DeepgramTranscriber(BaseAsyncTranscriber[DeepgramTranscriberConfig]):
                     try:
                         msg = await ws.recv()
                     except Exception as e:
-                        self.logger.debug(f"Got error {e} in Deepgram receiver")
+                        self.logger.debug(
+                            f"Got error {e} in Deepgram receiver")
                         break
                     data = json.loads(msg)
                     if (
@@ -211,7 +214,8 @@ class DeepgramTranscriber(BaseAsyncTranscriber[DeepgramTranscriberConfig]):
                     cur_min_latency = self.audio_cursor - transcript_cursor
 
                     avg_latency_hist.record(
-                        (cur_min_latency + cur_max_latency) / 2 * data["duration"]
+                        (cur_min_latency + cur_max_latency) /
+                        2 * data["duration"]
                     )
                     duration_hist.record(data["duration"])
 
@@ -220,7 +224,8 @@ class DeepgramTranscriber(BaseAsyncTranscriber[DeepgramTranscriberConfig]):
                     min_latency_hist.record(max(cur_min_latency, 0))
 
                     is_final = data["is_final"]
-                    speech_final = self.is_speech_final(buffer, data, time_silent)
+                    speech_final = self.is_speech_final(
+                        buffer, data, time_silent)
                     top_choice = data["channel"]["alternatives"][0]
                     confidence = top_choice["confidence"]
 
