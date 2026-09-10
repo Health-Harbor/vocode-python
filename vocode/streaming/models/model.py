@@ -1,21 +1,42 @@
-from typing import Any, List, Tuple
-import pydantic
+from typing import Any, ClassVar, List, Tuple
+import json
+
+from pydantic import BaseModel as PydanticBaseModel, ConfigDict, model_serializer, model_validator
 
 
-class BaseModel(pydantic.BaseModel):
-    def __init__(self, **data):
+class BaseModel(PydanticBaseModel):
+    model_config = ConfigDict(
+        extra="ignore",
+        protected_namespaces=(),
+        arbitrary_types_allowed=True,
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _parse_nested_typed_models(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        parsed = dict(data)
         for key, value in data.items():
-            if isinstance(value, dict):
-                if "type" in value:
-                    data[key] = TypedModel.parse_obj(value)
-        super().__init__(**data)
+            if isinstance(value, dict) and "type" in value:
+                parsed[key] = TypedModel.model_validate(value)
+        return parsed
+
+    def model_dump(self, *args, **kwargs):
+        # Preserve subclass fields when nested under a base TypedModel annotation.
+        kwargs.setdefault("serialize_as_any", True)
+        return super().model_dump(*args, **kwargs)
+
+    def model_dump_json(self, *args, **kwargs):
+        kwargs.setdefault("serialize_as_any", True)
+        return super().model_dump_json(*args, **kwargs)
 
 
-# Adapted from https://github.com/pydantic/pydantic/discussions/3091
 class TypedModel(BaseModel):
-    _subtypes_: List[Tuple[Any, Any]] = []
+    _subtypes_: ClassVar[List[Tuple[Any, Any]]] = []
 
-    def __init_subclass__(cls, type=None):
+    def __init_subclass__(cls, type=None, **kwargs):
+        super().__init_subclass__(**kwargs)
         cls._subtypes_.append((type, cls))
 
     @classmethod
@@ -32,20 +53,28 @@ class TypedModel(BaseModel):
                 return t
         raise ValueError(f"Unknown class {cls_name}")
 
+    @model_validator(mode="wrap")
     @classmethod
-    def parse_obj(cls, obj):
-        data_type = obj.get("type")
-        if data_type is None:
-            raise ValueError(f"type is required for {cls.__name__}")
+    def _resolve_subtype(cls, data, handler):
+        if isinstance(data, dict):
+            data_type = data.get("type")
+            if data_type is not None:
+                sub = cls.get_cls(data_type)
+                if sub is not cls:
+                    return sub.model_validate(data)
+        return handler(data)
 
-        sub = cls.get_cls(data_type)
-        if sub is None:
-            raise ValueError(f"Unknown type {data_type}")
-        return sub(**obj)
+    @model_serializer(mode="wrap")
+    def _serialize_type(self, serializer):
+        data = serializer(self)
+        data["type"] = self.get_type(self.__class__.__name__)
+        return data
 
-    def _iter(self, **kwargs):
-        yield "type", self.get_type(self.__class__.__name__)
-        yield from super()._iter(**kwargs)
+    @classmethod
+    def model_validate_json(cls, json_data, **kwargs):
+        if isinstance(json_data, (bytes, bytearray)):
+            json_data = json_data.decode()
+        return cls.model_validate(json.loads(json_data), **kwargs)
 
     @property
     def type(self):

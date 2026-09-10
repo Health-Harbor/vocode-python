@@ -81,7 +81,7 @@ class ConversationRouter(BaseRouter):
 
     async def conversation(self, websocket: WebSocket):
         await websocket.accept()
-        start_message: AudioConfigStartMessage = AudioConfigStartMessage.parse_obj(
+        start_message: AudioConfigStartMessage = AudioConfigStartMessage.model_validate(
             await websocket.receive_json()
         )
         self.logger.debug(f"Conversation started")
@@ -91,9 +91,9 @@ class ConversationRouter(BaseRouter):
             start_message.output_audio_config.audio_encoding,
         )
         conversation = self.get_conversation(output_device, start_message)
-        await conversation.start(lambda: websocket.send_text(ReadyMessage().json()))
+        await conversation.start(lambda: websocket.send_text(ReadyMessage().model_dump_json()))
         while conversation.is_active():
-            message: WebSocketMessage = WebSocketMessage.parse_obj(
+            message: WebSocketMessage = WebSocketMessage.model_validate(
                 await websocket.receive_json()
             )
             if message.type == WebSocketMessageType.STOP:
@@ -116,7 +116,7 @@ class TranscriptEventManager(events_manager.EventsManager):
         if event.type == EventType.TRANSCRIPT:
             transcript_event = typing.cast(TranscriptEvent, event)
             self.output_device.consume_transcript(transcript_event)
-            # self.logger.debug(event.dict())
+            # self.logger.debug(event.model_dump())
 
     def restart(self, output_device: WebsocketOutputDevice):
         self.output_device = output_device

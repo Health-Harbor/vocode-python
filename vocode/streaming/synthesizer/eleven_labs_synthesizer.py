@@ -61,7 +61,13 @@ class ElevenLabsSynthesizer(BaseSynthesizer[ElevenLabsSynthesizerConfig]):
         headers = {"xi-api-key": self.api_key}
         body = {
             "text": message.text,
-            "voice_settings": voice.settings.dict() if voice.settings else None,
+            "voice_settings": (
+                voice.settings.model_dump()
+                if voice.settings and hasattr(voice.settings, "model_dump")
+                else voice.settings.dict()
+                if voice.settings
+                else None
+            ),
         }
         if self.model_id:
             body["model_id"] = self.model_id

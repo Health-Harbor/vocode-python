@@ -56,7 +56,7 @@ class OutboundCall:
                     conversation_id=self.conversation_id,
                     twilio_config=self.twilio_config,
                     vonage_config=self.vonage_config,
-                ).dict(),
+                ).model_dump(),
                 timeout=5,
             )
             if not response.ok:
@@ -78,7 +78,7 @@ class OutboundCall:
                     call_id=self.conversation_id,
                     twilio_config=self.twilio_config,
                     vonage_config=self.vonage_config,
-                ).dict(),
+                ).model_dump(),
                 timeout=2,
             )
             assert response.ok or response.status_code == 404, response.text

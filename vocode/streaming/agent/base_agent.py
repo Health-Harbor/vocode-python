@@ -40,8 +40,8 @@ class AgentInputType(str, Enum):
 
 class AgentInput(TypedModel, type=AgentInputType.BASE.value):
     conversation_id: str
-    vonage_uuid: Optional[str]
-    twilio_sid: Optional[str]
+    vonage_uuid: Optional[str] = None
+    twilio_sid: Optional[str] = None
 
 
 class TranscriptionAgentInput(AgentInput, type=AgentInputType.TRANSCRIPTION.value):

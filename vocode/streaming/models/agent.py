@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 from enum import Enum
 
-from pydantic import validator
+from pydantic import model_validator
 
 from vocode.streaming.models.message import BaseMessage
 from .model import TypedModel, BaseModel
@@ -39,13 +39,13 @@ class FillerAudioConfig(BaseModel):
     use_phrases: bool = True
     use_typing_noise: bool = False
 
-    @validator("use_typing_noise")
-    def typing_noise_excludes_phrases(cls, v, values):
-        if v and values.get("use_phrases"):
-            values["use_phrases"] = False
-        if not v and not values.get("use_phrases"):
+    @model_validator(mode="after")
+    def typing_noise_excludes_phrases(self):
+        if self.use_typing_noise and self.use_phrases:
+            self.use_phrases = False
+        if not self.use_typing_noise and not self.use_phrases:
             raise ValueError("must use either typing noise or phrases for filler audio")
-        return v
+        return self
 
 
 class WebhookConfig(BaseModel):

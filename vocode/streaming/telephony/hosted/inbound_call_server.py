@@ -58,7 +58,7 @@ class InboundCallServer:
                     transcriber_config=self.transcriber_config,
                     synthesizer_config=self.synthesizer_config,
                     vonage_config=self.vonage_config,
-                ).dict(),
+                ).model_dump(),
             )
             assert response.ok, response.text
             return Response(
@@ -84,7 +84,7 @@ class InboundCallServer:
                     transcriber_config=self.transcriber_config,
                     synthesizer_config=self.synthesizer_config,
                     twilio_config=self.twilio_config,
-                ).dict(),
+                ).model_dump(),
             )
             if response.status_code == 429:
                 return Response(

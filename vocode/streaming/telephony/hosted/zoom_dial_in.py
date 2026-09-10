@@ -54,7 +54,7 @@ class ZoomDialIn(OutboundCall):
                 synthesizer_config=self.synthesizer_config,
                 conversation_id=self.conversation_id,
                 twilio_config=self.twilio_config,
-            ).dict(),
+            ).model_dump(),
         )
         if not response.ok:
             if response.status_code == 429:

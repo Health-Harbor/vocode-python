@@ -34,12 +34,12 @@ class WebsocketOutputDevice(BaseOutputDevice):
     def consume_nonblocking(self, chunk: bytes):
         if self.active:
             audio_message = AudioMessage.from_bytes(chunk)
-            self.queue.put_nowait(audio_message.json())
+            self.queue.put_nowait(audio_message.model_dump_json())
 
     def consume_transcript(self, event: TranscriptEvent):
         if self.active:
             transcript_message = TranscriptMessage.from_event(event)
-            self.queue.put_nowait(transcript_message.json())
+            self.queue.put_nowait(transcript_message.model_dump_json())
 
     def terminate(self):
         self.process_task.cancel()

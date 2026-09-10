@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 from openai.openai_object import OpenAIObject
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 import pytest
 from vocode.streaming.agent.utils import stream_openai_response_async
 
@@ -21,6 +21,8 @@ def create_chatgpt_openai_object(
 
 
 class StreamOpenAIResponseTestCase(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     openai_objects: List[OpenAIObject]
     expected_sentences: List[str]
 

@@ -93,7 +93,7 @@ def format_openai_chat_messages_from_transcript(
                     "content": None,
                     "function_call": {
                         "name": event_log.action_type,
-                        "arguments": event_log.action_input.params.json(),
+                        "arguments": event_log.action_input.params.model_dump_json(),
                     },
                 }
             )
@@ -102,7 +102,7 @@ def format_openai_chat_messages_from_transcript(
                 {
                     "role": "function",
                     "name": event_log.action_type,
-                    "content": event_log.action_output.response.json(),
+                    "content": event_log.action_output.response.model_dump_json(),
                 }
             )
     return chat_messages

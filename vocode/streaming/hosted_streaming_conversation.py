@@ -79,25 +79,25 @@ class HostedStreamingConversation:
                     synthesizer_config=self.synthesizer_config,
                     conversation_id=self.id,
                 )
-                await ws.send(start_message.json())
+                await ws.send(start_message.model_dump_json())
                 await self.wait_for_ready()
                 self.logger.info("Listening...press Ctrl+C to stop")
                 while self.active:
                     data = await self.input_device.get_audio()
                     if data:
                         try:
-                            await ws.send(AudioMessage.from_bytes(data).json())
+                            await ws.send(AudioMessage.from_bytes(data).model_dump_json())
                         except ConnectionClosedOK:
                             self.deactivate()
                             return
                         await asyncio.sleep(0)
-                await ws.send(StopMessage().json())
+                await ws.send(StopMessage().model_dump_json())
 
             async def receiver(ws: WebSocketClientProtocol):
-                ReadyMessage.parse_raw(await ws.recv())
+                ReadyMessage.model_validate_json(await ws.recv())
                 self.receiver_ready = True
                 async for msg in ws:
-                    audio_message = AudioMessage.parse_raw(msg)
+                    audio_message = AudioMessage.model_validate_json(msg)
                     self.output_audio_queue.put_nowait(audio_message.get_bytes())
 
             output_thread = threading.Thread(target=self.play_audio)

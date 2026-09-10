@@ -21,13 +21,13 @@ class RedisConfigManager(BaseConfigManager):
 
     async def save_config(self, conversation_id: str, config: BaseCallConfig):
         self.logger.debug(f"Saving config for {conversation_id}")
-        await self.redis.set(conversation_id, config.json())
+        await self.redis.set(conversation_id, config.model_dump_json())
 
     async def get_config(self, conversation_id) -> Optional[BaseCallConfig]:
         self.logger.debug(f"Getting config for {conversation_id}")
         raw_config = await self.redis.get(conversation_id)
         if raw_config:
-            return BaseCallConfig.parse_raw(raw_config)
+            return BaseCallConfig.model_validate_json(raw_config)
         return None
 
     async def delete_config(self, conversation_id):

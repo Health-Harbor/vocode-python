@@ -3,7 +3,7 @@ from functools import partial
 import logging
 from typing import List, Optional
 from fastapi import APIRouter, Form, Request, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from vocode.streaming.agent.factory import AgentFactory
 from vocode.streaming.models.agent import AgentConfig
 from vocode.streaming.models.synthesizer import SynthesizerConfig
@@ -54,6 +54,8 @@ class VonageInboundCallConfig(AbstractInboundCallConfig):
 
 
 class VonageAnswerRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     to: str
     from_: str = Field(..., alias="from")
     uuid: str

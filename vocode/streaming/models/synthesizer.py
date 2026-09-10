@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import validator
+from pydantic import Field, field_validator, model_validator
 from vocode.streaming.models.client_backend import OutputAudioConfig
 
 from vocode.streaming.output_device.base_output_device import BaseOutputDevice
@@ -29,9 +29,12 @@ class SynthesizerType(str, Enum):
 
 
 class SentimentConfig(BaseModel):
-    emotions: List[str] = ["angry", "friendly", "sad", "whispering"]
+    emotions: List[str] = Field(
+        default_factory=lambda: ["angry", "friendly", "sad", "whispering"]
+    )
 
-    @validator("emotions")
+    @field_validator("emotions")
+    @classmethod
     def emotions_must_not_be_empty(cls, v):
         if len(v) == 0:
             raise ValueError("must have at least one emotion")
@@ -44,9 +47,6 @@ class SynthesizerConfig(TypedModel, type=SynthesizerType.BASE.value):
     should_encode_as_wav: bool = False
     use_audio_cache: bool = False
     sentiment_config: Optional[SentimentConfig] = None
-
-    class Config:
-        arbitrary_types_allowed = True
 
     @classmethod
     def from_output_device(cls, output_device: BaseOutputDevice, **kwargs):
@@ -106,25 +106,26 @@ class ElevenLabsSynthesizerConfig(
 ):
     api_key: Optional[str] = None
     voice_id: Optional[str] = ELEVEN_LABS_ADAM_VOICE_ID
-    stability: Optional[float]
-    similarity_boost: Optional[float]
-    optimize_streaming_latency: Optional[int]
-    model_id: Optional[str]
+    stability: Optional[float] = None
+    similarity_boost: Optional[float] = None
+    optimize_streaming_latency: Optional[int] = None
+    model_id: Optional[str] = None
 
-    @validator("voice_id")
+    @field_validator("voice_id")
+    @classmethod
     def set_name(cls, voice_id):
         return voice_id or ELEVEN_LABS_ADAM_VOICE_ID
 
-    @validator("similarity_boost", always=True)
-    def stability_and_similarity_boost_check(cls, similarity_boost, values):
-        stability = values.get("stability")
-        if (stability is None) != (similarity_boost is None):
+    @model_validator(mode="after")
+    def stability_and_similarity_boost_check(self):
+        if (self.stability is None) != (self.similarity_boost is None):
             raise ValueError(
                 "Both stability and similarity_boost must be set or not set."
             )
-        return similarity_boost
+        return self
 
-    @validator("optimize_streaming_latency")
+    @field_validator("optimize_streaming_latency")
+    @classmethod
     def optimize_streaming_latency_check(cls, optimize_streaming_latency):
         if optimize_streaming_latency is not None and not (
             0 <= optimize_streaming_latency <= 4
@@ -153,11 +154,13 @@ class CoquiSynthesizerConfig(SynthesizerConfig, type=SynthesizerType.COQUI.value
     voice_prompt: Optional[str] = None
     use_xtts: Optional[bool] = True
 
-    @validator("voice_id", always=True)
-    def override_voice_id_with_prompt(cls, voice_id, values):
-        if values.get("voice_prompt"):
-            return None
-        return voice_id or COQUI_DEFAULT_SPEAKER_ID
+    @model_validator(mode="after")
+    def override_voice_id_with_prompt(self):
+        if self.voice_prompt:
+            self.voice_id = None
+        elif not self.voice_id:
+            self.voice_id = COQUI_DEFAULT_SPEAKER_ID
+        return self
 
 
 PLAYHT_DEFAULT_VOICE_ID = "larry"
@@ -172,7 +175,7 @@ class PlayHtSynthesizerConfig(SynthesizerConfig, type=SynthesizerType.PLAY_HT.va
 class CoquiTTSSynthesizerConfig(
     SynthesizerConfig, type=SynthesizerType.COQUI_TTS.value
 ):
-    tts_kwargs: dict = {}
+    tts_kwargs: dict = Field(default_factory=dict)
     speaker: Optional[str] = None
     language: Optional[str] = None
 
@@ -191,5 +194,5 @@ class StreamElementsSynthesizerConfig(
 
 
 class BarkSynthesizerConfig(SynthesizerConfig, type=SynthesizerType.BARK.value):
-    preload_kwargs: Dict[str, Any] = {}
-    generate_kwargs: Dict[str, Any] = {}
+    preload_kwargs: Dict[str, Any] = Field(default_factory=dict)
+    generate_kwargs: Dict[str, Any] = Field(default_factory=dict)

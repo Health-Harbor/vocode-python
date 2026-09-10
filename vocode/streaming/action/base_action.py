@@ -36,7 +36,7 @@ class BaseAction(Generic[ParametersType, ResponseType]):
         raise NotImplementedError
 
     def get_openai_function(self):
-        parameters_schema = self.parameters_type.schema()
+        parameters_schema = self.parameters_type.model_json_schema()
         parameters_schema = exclude_keys_recursive(parameters_schema, {"title"})
         if self.should_respond:
             parameters_schema["properties"][

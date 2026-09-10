@@ -1,6 +1,6 @@
 import time
 from typing import Any, Dict, List, Optional, Union
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from enum import Enum
 from vocode.streaming.models.actions import ActionInput, ActionOutput
 from vocode.streaming.models.events import Sender, Event, EventType
@@ -52,12 +52,11 @@ class ActionFinish(EventLog):
 
 
 class Transcript(BaseModel):
-    event_logs: List[EventLog] = []
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    event_logs: List[EventLog] = Field(default_factory=list)
     start_time: float = Field(default_factory=time.time)
     events_manager: Optional[EventsManager] = None
-
-    class Config:
-        arbitrary_types_allowed = True
 
     def attach_events_manager(self, events_manager: EventsManager):
         self.events_manager = events_manager

@@ -36,7 +36,7 @@ class RESTfulUserImplementedAgent(RespondAgent[RESTfulUserImplementedAgentConfig
             async with aiohttp.ClientSession() as session:
                 payload = RESTfulAgentInput(
                     human_input=human_input, conversation_id=conversation_id
-                ).dict()
+                ).model_dump()
                 async with session.request(
                     config.method,
                     config.url,
@@ -44,7 +44,7 @@ class RESTfulUserImplementedAgent(RespondAgent[RESTfulUserImplementedAgentConfig
                     timeout=aiohttp.ClientTimeout(total=15),
                 ) as response:
                     assert response.status == 200
-                    output: RESTfulAgentOutput = RESTfulAgentOutput.parse_obj(
+                    output: RESTfulAgentOutput = RESTfulAgentOutput.model_validate(
                         await response.json()
                     )
                     output_response = None

@@ -102,7 +102,7 @@ class WebSocketUserImplementedAgent(BaseAgent[WebSocketUserImplementedAgentConfi
                                 transcription.message,
                                 conversation_id=payload.conversation_id,
                             )
-                            agent_request_json = agent_request.json()
+                            agent_request_json = agent_request.model_dump_json()
                             self.logger.info(
                                 f"Sending data to web socket agent: {agent_request_json}"
                             )
@@ -129,7 +129,7 @@ class WebSocketUserImplementedAgent(BaseAgent[WebSocketUserImplementedAgentConfi
                         msg = await ws.recv()
                         self.logger.info("Received data from web socket agent")
                         data = json.loads(msg)
-                        message = WebSocketAgentMessage.parse_obj(data)
+                        message = WebSocketAgentMessage.model_validate(data)
                         self._handle_incoming_socket_message(message)
 
                     except websockets.exceptions.ConnectionClosed as e:

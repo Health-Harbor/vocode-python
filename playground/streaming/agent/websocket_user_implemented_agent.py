@@ -10,7 +10,7 @@ from vocode.streaming.models.websocket_agent import (
 
 async def echo(websocket):
     async for message in websocket:
-        message = WebSocketAgentMessage.parse_raw(message)
+        message = WebSocketAgentMessage.model_validate_json(message)
         if isinstance(message, WebSocketAgentTextMessage):
             text = message.data.text
             print("Conversation ID", message.conversation_id)
@@ -18,7 +18,7 @@ async def echo(websocket):
                 response = WebSocketAgentStopMessage()
             else:
                 response = WebSocketAgentTextMessage.from_text(message.data.text)
-        await websocket.send(response.json())
+        await websocket.send(response.model_dump_json())
 
 
 async def main():
